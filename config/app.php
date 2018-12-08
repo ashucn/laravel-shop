@@ -78,7 +78,8 @@ return [
     |
     */
 
-    'locale' => 'en',
+//    'locale' => 'en',
+    'locale' => 'zh-CN',
     /**
      * factory 工厂文件会使用 faker 来自动生成字段的内容，默认情况下是英文，我们可以修改成中文
      */

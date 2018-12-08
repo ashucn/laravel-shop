@@ -23,6 +23,8 @@ Route::group(['middleware' => 'auth'], function() {
 
     Route::group(['middleware' => 'email_verified'], function() {
         Route::get('user-addresses', 'UserAddressesController@index')->name('user_addresses.index');
+        Route::get('user-addresses/create', 'UserAddressesController@create')->name('user_addresses.create');
+        Route::post('user-addresses', 'UserAddressesController@store')->name('user_addresses.store');
     });
 
 });

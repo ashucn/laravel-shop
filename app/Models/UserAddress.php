@@ -36,6 +36,11 @@ class UserAddress extends Model
         return $this->belongsTo(User::class);
     }
 
+    /**
+     * 修改器文档：
+     * https://laravel-china.org/docs/laravel/5.5/eloquent-mutators/1406#accessors-and-mutators
+     * @return string
+     */
     public function getFullAddressAttribute()
     {
         return "{$this->province}{$this->city}{$this->district}{$this->address}";
