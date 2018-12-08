@@ -17,6 +17,7 @@ class User extends Authenticatable
     protected $fillable = [
         'name', 'email', 'password', 'email_verified',
     ];
+
     /**
      * 由于 email_verified 是一个 bool 类型的字段，
      * 所以我们新增一个 $casts 属性，告诉 Laravel 这个字段要转换成 bool 类型：
@@ -34,4 +35,14 @@ class User extends Authenticatable
     protected $hidden = [
         'password', 'remember_token',
     ];
+
+    /**
+     * 一对多
+     * （一个 User 可以有多个 UserAddress，一个 UserAddress 只能属于一个 User）
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function addresses()
+    {
+        return $this->hasMany(UserAddress::class);
+    }
 }
