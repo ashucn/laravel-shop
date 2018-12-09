@@ -20,6 +20,7 @@
     },
     "dependencies": {
         "china-area-data": "^4.0.0",
+        "sweetalert": "^2.1.2",
         "us-area-codes": "^1.0.0"
     }
 }
