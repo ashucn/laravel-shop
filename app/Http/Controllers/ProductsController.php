@@ -118,4 +118,17 @@ class ProductsController extends Controller
 
         return [];
     }
+
+    /**
+     * 在定义关联关系的时候就已经加上了排序规则，这里就不需要再次设置了。
+     *
+     * @param Request $request
+     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
+     */
+    public function favorites(Request $request)
+    {
+        $products = $request->user()->favoriteProducts()->paginate(16);
+
+        return view('products.favorites', ['products' => $products]);
+    }
 }

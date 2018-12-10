@@ -48,6 +48,7 @@ class User extends Authenticatable
 
     /**
      * 多对多的关联
+     * 加上了排序规则
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      */
     public function favoriteProducts()
