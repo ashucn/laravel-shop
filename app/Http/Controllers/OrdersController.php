@@ -27,6 +27,24 @@ class OrdersController extends Controller
     }
 
     /**
+     * 订单详情页
+     * load() 方法与 with() 预加载方法有些类似，称为 延迟预加载，
+     * 不同点在于 load() 是在已经查询出来的模型上调用，
+     * 而 with() 则是在 ORM 查询构造器上调用。
+     *
+     * @param Order $order
+     * @param Request $request
+     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     */
+    public function show(Order $order, Request $request)
+    {
+        $this->authorize('own', $order);
+
+        return view('orders.show', ['order' => $order->load(['items.productSku', 'items.product'])]);
+    }
+
+    /**
      * 下订单的思路：
      * 在事务里先创建了一个订单，把当前用户设为订单的用户，然后把传入的地址数据快照进 address 字段。
      * 然后遍历传入的商品 SKU 及其数量，
