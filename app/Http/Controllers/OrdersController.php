@@ -7,6 +7,8 @@ use App\Models\ProductSku;
 use App\Models\UserAddress;
 use App\Models\Order;
 use Carbon\Carbon;
+use App\Jobs\CloseOrder;
+use App\Exceptions\InvalidRequestException;
 
 class OrdersController extends Controller
 {
@@ -66,6 +68,9 @@ class OrdersController extends Controller
                 $item->productSku()->associate($sku);
                 $item->save();
                 $totalAmount += $sku->price * $data['amount'];
+                if ($sku->decreaseStock($data['amount']) <= 0) {
+                    throw new InvalidRequestException('该商品库存不足');
+                }
             }
 
             // 更新订单总金额
@@ -77,6 +82,8 @@ class OrdersController extends Controller
 
             return $order;
         });
+//        触发删除未支付订单
+        $this->dispatch(new CloseOrder($order, config('app.order_ttl')));
 
         return $order;
     }
