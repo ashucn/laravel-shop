@@ -132,11 +132,12 @@
 
       // 监听创建订单按钮的点击事件
       $('.btn-create-order').click(function() {
+        var order_form = $('#order-form');
         // 构建请求参数，将用户选择的地址的 id 和备注内容写入请求参数
         var req = {
-          address_id: $('#order-form').find('select[name=address]').val(),
+          address_id: order_form.find('select[name=address]').val(),
           items: [],
-          remark: $('#order-form').find('textarea[name=remark]').val(),
+          remark: order_form.find('textarea[name=remark]').val(),
         };
         // 遍历 <table> 标签内所有带有 data-id 属性的 <tr> 标签，也就是每一个购物车中的商品 SKU
         $('table tr[data-id]').each(function() {
@@ -149,7 +150,7 @@
           // 获取当前行中数量输入框
           var $input = $(this).find('input[name=amount]');
           // 如果用户将数量设为 0 或者不是一个数字，则也跳过
-          if ($input.val() == 0 || isNaN($input.val())) {
+          if ($input.val() === 0 || isNaN($input.val())) {
             return;
           }
           // 把 SKU id 和数量存入请求参数数组中
