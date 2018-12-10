@@ -8,6 +8,11 @@ use App\Models\Product;
 
 class ProductsController extends Controller
 {
+
+    /**
+     * @param Request $request
+     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
+     */
     public function index(Request $request)
     {
         // 创建一个查询构造器
@@ -53,6 +58,12 @@ class ProductsController extends Controller
         ]);
     }
 
+    /**
+     * @param Product $product
+     * @param Request $request
+     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
+     * @throws InvalidRequestException
+     */
     public function show(Product $product, Request $request)
     {
         // 判断商品是否已经上架，如果没有上架则抛出异常。
@@ -60,6 +71,51 @@ class ProductsController extends Controller
             throw new InvalidRequestException('商品未上架');
         }
 
-        return view('products.show', ['product' => $product]);
+        $favored = false;
+        // 用户未登录时返回的是 null，已登录时返回的是对应的用户对象
+        if($user = $request->user()) {
+            // 从当前用户已收藏的商品中搜索 id 为当前商品 id 的商品
+            // boolval() 函数用于把值转为布尔值
+            $favored = boolval($user->favoriteProducts()->find($product->id));
+        }
+
+        return view('products.show', ['product' => $product, 'favored' => $favored]);
+    }
+
+    /**
+     * 判断当前用户是否已经收藏了此商品，
+     * 如果已经收藏则不做任何操作直接返回，
+     * 否则通过 attach() 方法将当前用户和此商品关联起来。
+     * attach() 方法的参数可以是模型的 id，也可以是模型对象本身，因此这里还可以写成 attach($product->id)。
+     *
+     * @param Product $product
+     * @param Request $request
+     * @return array
+     */
+    public function favor(Product $product, Request $request)
+    {
+        $user = $request->user();
+        if ($user->favoriteProducts()->find($product->id)) {
+            return [];
+        }
+
+        $user->favoriteProducts()->attach($product);
+
+        return [];
+    }
+
+    /**
+     * detach() 方法用于取消多对多的关联，接受的参数个数与 attach() 方法一致。
+     *
+     * @param Product $product
+     * @param Request $request
+     * @return array
+     */
+    public function disfavor(Product $product, Request $request)
+    {
+        $user = $request->user();
+        $user->favoriteProducts()->detach($product);
+
+        return [];
     }
 }
