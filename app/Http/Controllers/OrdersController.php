@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Http\Request;
 use App\Http\Requests\OrderRequest;
 use App\Models\ProductSku;
 use App\Models\UserAddress;
@@ -13,8 +14,20 @@ use App\Exceptions\InvalidRequestException;
 class OrdersController extends Controller
 {
 
+    public function index(Request $request)
+    {
+        $orders = Order::query()
+            // 使用 with 方法预加载，避免N + 1问题
+            ->with(['items.product', 'items.productSku'])
+            ->where('user_id', $request->user()->id)
+            ->orderBy('created_at', 'desc')
+            ->paginate();
+
+        return view('orders.index', ['orders' => $orders]);
+    }
+
     /**
-     * 思路
+     * 下订单的思路：
      * 在事务里先创建了一个订单，把当前用户设为订单的用户，然后把传入的地址数据快照进 address 字段。
      * 然后遍历传入的商品 SKU 及其数量，
      * $order->items()->make() 方法可以新建一个关联关系的对象（也就是 OrderItem）但不保存到数据库，
