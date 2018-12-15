@@ -46,6 +46,7 @@ Route::group(['middleware' => 'auth'], function() {
         Route::post('orders/{order}/received', 'OrdersController@received')->name('orders.received'); // 确认收货
         Route::get('orders/{order}/review', 'OrdersController@review')->name('orders.review.show');// 评价已购商品
         Route::post('orders/{order}/review', 'OrdersController@sendReview')->name('orders.review.store');
+        Route::post('orders/{order}/apply_refund', 'OrdersController@applyRefund')->name('orders.apply_refund');
     });
 });
 // 服务器端回调的路由不能放到带有 auth 中间件的路由组中，因为支付宝的服务器请求不会带有认证信息。

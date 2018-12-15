@@ -48,6 +48,9 @@ class AddCartRequest extends Request
         ];
     }
 
+    /**
+     * @return array
+     */
     public function attributes()
     {
         return [
