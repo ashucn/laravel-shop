@@ -12,9 +12,12 @@ use Carbon\Carbon;
 use App\Http\Requests\SendReviewRequest;
 use App\Events\OrderReviewed;
 use App\Http\Requests\ApplyRefundRequest;
+use App\Exceptions\CouponCodeUnavailableException;
+use App\Models\CouponCode;
 
 class OrdersController extends Controller
 {
+
     protected $orderService;
 
     /**
@@ -79,9 +82,18 @@ class OrdersController extends Controller
     {
         $user = $request->user();
         $address = UserAddress::find($request->input('address_id'));
+        $coupon = null;
 
-        return $orderService->store($user, $address, $request->input('remark'), $request->input('items'));
+        // 如果用户提交了优惠码
+        if ($code = $request->input('coupon_code')) {
+            $coupon = CouponCode::where('code', $code)->first();
+            if (!$coupon) {
+                throw new CouponCodeUnavailableException('优惠券不存在');
+            }
+        }
 
+        // 参数中加入 $coupon 变量
+        return $orderService->store($user, $address, $request->input('remark'), $request->input('items'), $coupon);
     }
 
     /**
@@ -118,6 +130,7 @@ class OrdersController extends Controller
         if (!$order->paid_at) {
             throw new InvalidRequestException('该订单未支付，不可评价');
         }
+
         // 使用 load 方法加载关联数据，避免 N + 1 性能问题
         return view('orders.review', ['order' => $order->load(['items.productSku', 'items.product'])]);
     }
@@ -183,7 +196,7 @@ class OrdersController extends Controller
             throw new InvalidRequestException('该订单已经申请过退款，请勿重复申请');
         }
         // 将用户输入的退款理由放到订单的 extra 字段中
-        $extra                  = $order->extra ?: [];
+        $extra = $order->extra ?: [];
         $extra['refund_reason'] = $request->input('reason');
         // 将订单退款状态改为已申请退款
         $order->update([
