@@ -58,12 +58,12 @@
                                 <div class="line-label">订单编号：</div>
                                 <div class="line-value">{{ $order->no }}</div>
                             </div>
-                            {{--<!-- 输出物流状态 -->--}}
+                            {{-- 输出物流状态 --}}
                             <div class="line">
                                 <div class="line-label">物流状态：</div>
                                 <div class="line-value">{{ \App\Models\Order::$shipStatusMap[$order->ship_status] }}</div>
                             </div>
-                            {{--<!-- 如果有物流信息则展示 -->--}}
+                            {{-- 如果有物流信息则展示 --}}
                             @if($order->ship_data)
                             <div class="line">
                                 <div class="line-label">物流信息：</div>
@@ -71,7 +71,7 @@
                             </div>
                             @endif
 
-                        {{--<!-- 订单已支付，且退款状态不是未退款时展示退款信息 -->--}}
+                        {{-- 订单已支付，且退款状态不是未退款时展示退款信息 --}}
                             @if($order->paid_at && $order->refund_status !== \App\Models\Order::REFUND_STATUS_PENDING)
                                 <div class="line">
                                     <div class="line-label">退款状态：</div>
@@ -85,6 +85,14 @@
                             {{--<div class="line-value">{{ $order->no }}</div>--}}
                         </div>
                         <div class="order-summary text-right">
+                            {{-- 展示优惠信息开始 --}}
+                            @if($order->couponCode)
+                                <div class="text-primary">
+                                    <span>优惠信息：</span>
+                                    <div class="value">{{ $order->couponCode->description }}</div>
+                                </div>
+                            @endif
+                        {{-- 展示优惠信息结束 --}}
                             <div class="total-amount">
                                 <span>订单总价：</span>
                                 <div class="value">￥{{ $order->total_amount }}</div>
@@ -112,7 +120,7 @@
                                     <div class="value">{{ $order->extra['refund_disagree_reason'] }}</div>
                                 </div>
                             @endif
-                            {{--<!-- 支付按钮开始 -->--}}
+                            {{-- 支付按钮开始 --}}
                             @if(!$order->paid_at && !$order->closed)
                                 <div class="payment-buttons">
                                     <a class="btn btn-primary btn-sm"
@@ -120,15 +128,15 @@
                                     <button class="btn btn-sm btn-success" id='btn-wechat'>微信支付</button>
                                 </div>
                             @endif
-                            {{--<!-- 支付按钮结束 -->--}}
+                            {{-- 支付按钮结束 --}}
 
-                        {{--<!-- 如果订单的发货状态为已发货则展示确认收货按钮 -->--}}
+                        {{-- 如果订单的发货状态为已发货则展示确认收货按钮 --}}
                             @if($order->ship_status === \App\Models\Order::SHIP_STATUS_DELIVERED)
                                 <div class="receive-button">
                                     <button type="button" id="btn-receive" class="btn btn-sm btn-success">确认收货</button>
                                 </div>
                             @endif
-                        {{--<!-- 订单已支付，且退款状态是未退款时展示申请退款按钮 -->--}}
+                        {{-- 订单已支付，且退款状态是未退款时展示申请退款按钮 --}}
                             @if($order->paid_at && $order->refund_status === \App\Models\Order::REFUND_STATUS_PENDING)
                                 <div class="refund-button">
                                     <button class="btn btn-sm btn-danger" id="btn-apply-refund">申请退款</button>
