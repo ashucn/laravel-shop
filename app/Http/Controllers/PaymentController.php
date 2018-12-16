@@ -143,4 +143,41 @@ class PaymentController extends Controller
     {
         event(new OrderPaid($order));
     }
+
+    /**
+     * 微信支付的退款结果并不是实时返回的，而是通过退款回调来通知的，
+     * 所以需要实现微信退款回调的接口
+     * 更新：新版本的 yansongda/pay（>=2.4.0）内置了退款回调校验，
+     * 将原本此处自己实现的校验逻辑改为该库提供的校验方式。
+     * @param Request $request
+     * @return string
+     */
+    public function wechatRefundNotify(Request $request)
+    {
+        // 给微信的失败响应
+        $failXml = '<xml><return_code><![CDATA[FAIL]]></return_code><return_msg><![CDATA[FAIL]]></return_msg></xml>';
+        $data = app('wechat_pay')->verify(null, true);
+
+        // 没有找到对应的订单，原则上不可能发生，保证代码健壮性
+        if (!$order = Order::where('no', $data['out_trade_no'])->first()) {
+            return $failXml;
+        }
+
+        if ($data['refund_status'] === 'SUCCESS') {
+            // 退款成功，将订单退款状态改成退款成功
+            $order->update([
+                'refund_status' => Order::REFUND_STATUS_SUCCESS,
+            ]);
+        } else {
+            // 退款失败，将具体状态存入 extra 字段，并表退款状态改成失败
+            $extra = $order->extra;
+            $extra['refund_failed_code'] = $data['refund_status'];
+            $order->update([
+                'refund_status' => Order::REFUND_STATUS_FAILED,
+                'extra'         => $extra,
+            ]);
+        }
+
+        return app('wechat_pay')->success();
+    }
 }
