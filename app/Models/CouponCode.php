@@ -38,6 +38,7 @@ class CouponCode extends Model
     protected $dates = ['not_before', 'not_after'];
 
     // 添加前端显示字段
+    // 参考：https://laravel-china.org/docs/laravel/5.5/eloquent-serialization#appending-values-to-json
     protected $appends = ['description'];
 
     /**
