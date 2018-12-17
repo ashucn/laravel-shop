@@ -86,175 +86,188 @@ var isURLSameOrigin = __webpack_require__("./node_modules/axios/lib/helpers/isUR
 var createError = __webpack_require__("./node_modules/axios/lib/core/createError.js");
 var btoa = (typeof window !== 'undefined' && window.btoa && window.btoa.bind(window)) || __webpack_require__("./node_modules/axios/lib/helpers/btoa.js");
 
-module.exports = function xhrAdapter(config) {
-  return new Promise(function dispatchXhrRequest(resolve, reject) {
-    var requestData = config.data;
-    var requestHeaders = config.headers;
+module.exports = function xhrAdapter(config)
+{
+    return new Promise(function dispatchXhrRequest(resolve, reject)
+    {
+        var requestData = config.data;
+        var requestHeaders = config.headers;
 
-    if (utils.isFormData(requestData)) {
-      delete requestHeaders['Content-Type']; // Let the browser set it
-    }
+        if (utils.isFormData(requestData)) {
+            delete requestHeaders['Content-Type']; // Let the browser set it
+        }
 
-    var request = new XMLHttpRequest();
-    var loadEvent = 'onreadystatechange';
-    var xDomain = false;
+        var request = new XMLHttpRequest();
+        var loadEvent = 'onreadystatechange';
+        var xDomain = false;
 
-    // For IE 8/9 CORS support
-    // Only supports POST and GET calls and doesn't returns the response headers.
-    // DON'T do this for testing b/c XMLHttpRequest is mocked, not XDomainRequest.
-    if ("development" !== 'test' &&
+      // For IE 8/9 CORS support
+      // Only supports POST and GET calls and doesn't returns the response headers.
+      // DON'T do this for testing b/c XMLHttpRequest is mocked, not XDomainRequest.
+        if ("development" !== 'test' &&
         typeof window !== 'undefined' &&
         window.XDomainRequest && !('withCredentials' in request) &&
         !isURLSameOrigin(config.url)) {
-      request = new window.XDomainRequest();
-      loadEvent = 'onload';
-      xDomain = true;
-      request.onprogress = function handleProgress() {};
-      request.ontimeout = function handleTimeout() {};
-    }
+            request = new window.XDomainRequest();
+            loadEvent = 'onload';
+            xDomain = true;
+            request.onprogress = function handleProgress()
+            {};
+            request.ontimeout = function handleTimeout()
+            {};
+        }
 
-    // HTTP basic authentication
-    if (config.auth) {
-      var username = config.auth.username || '';
-      var password = config.auth.password || '';
-      requestHeaders.Authorization = 'Basic ' + btoa(username + ':' + password);
-    }
+      // HTTP basic authentication
+        if (config.auth) {
+            var username = config.auth.username || '';
+            var password = config.auth.password || '';
+            requestHeaders.Authorization = 'Basic ' + btoa(username + ':' + password);
+        }
 
-    request.open(config.method.toUpperCase(), buildURL(config.url, config.params, config.paramsSerializer), true);
+        request.open(config.method.toUpperCase(), buildURL(config.url, config.params, config.paramsSerializer), true);
 
-    // Set the request timeout in MS
-    request.timeout = config.timeout;
+      // Set the request timeout in MS
+        request.timeout = config.timeout;
 
-    // Listen for ready state
-    request[loadEvent] = function handleLoad() {
-      if (!request || (request.readyState !== 4 && !xDomain)) {
-        return;
-      }
+      // Listen for ready state
+        request[loadEvent] = function handleLoad()
+        {
+            if (!request || (request.readyState !== 4 && !xDomain)) {
+                return;
+            }
 
-      // The request errored out and we didn't get a response, this will be
-      // handled by onerror instead
-      // With one exception: request that using file: protocol, most browsers
-      // will return status as 0 even though it's a successful request
-      if (request.status === 0 && !(request.responseURL && request.responseURL.indexOf('file:') === 0)) {
-        return;
-      }
+          // The request errored out and we didn't get a response, this will be
+          // handled by onerror instead
+          // With one exception: request that using file: protocol, most browsers
+          // will return status as 0 even though it's a successful request
+            if (request.status === 0 && !(request.responseURL && request.responseURL.indexOf('file:') === 0)) {
+                return;
+            }
 
-      // Prepare the response
-      var responseHeaders = 'getAllResponseHeaders' in request ? parseHeaders(request.getAllResponseHeaders()) : null;
-      var responseData = !config.responseType || config.responseType === 'text' ? request.responseText : request.response;
-      var response = {
-        data: responseData,
-        // IE sends 1223 instead of 204 (https://github.com/axios/axios/issues/201)
-        status: request.status === 1223 ? 204 : request.status,
-        statusText: request.status === 1223 ? 'No Content' : request.statusText,
-        headers: responseHeaders,
-        config: config,
-        request: request
-      };
+          // Prepare the response
+            var responseHeaders = 'getAllResponseHeaders' in request ? parseHeaders(request.getAllResponseHeaders()) : null;
+            var responseData = !config.responseType || config.responseType === 'text' ? request.responseText : request.response;
+            var response = {
+                data: responseData,
+                // IE sends 1223 instead of 204 (https://github.com/axios/axios/issues/201)
+                status: request.status === 1223 ? 204 : request.status,
+                statusText: request.status === 1223 ? 'No Content' : request.statusText,
+                headers: responseHeaders,
+                config: config,
+                request: request
+            };
 
-      settle(resolve, reject, response);
+            settle(resolve, reject, response);
 
-      // Clean up request
-      request = null;
-    };
+          // Clean up request
+            request = null;
+        };
 
-    // Handle low level network errors
-    request.onerror = function handleError() {
-      // Real errors are hidden from us by the browser
-      // onerror should only fire if it's a network error
-      reject(createError('Network Error', config, null, request));
+      // Handle low level network errors
+        request.onerror = function handleError()
+        {
+          // Real errors are hidden from us by the browser
+          // onerror should only fire if it's a network error
+            reject(createError('Network Error', config, null, request));
 
-      // Clean up request
-      request = null;
-    };
+          // Clean up request
+            request = null;
+        };
 
-    // Handle timeout
-    request.ontimeout = function handleTimeout() {
-      reject(createError('timeout of ' + config.timeout + 'ms exceeded', config, 'ECONNABORTED',
-        request));
+      // Handle timeout
+        request.ontimeout = function handleTimeout()
+        {
+            reject(createError(
+                'timeout of ' + config.timeout + 'ms exceeded',
+                config,
+                'ECONNABORTED',
+                request
+            ));
 
-      // Clean up request
-      request = null;
-    };
-
-    // Add xsrf header
-    // This is only done if running in a standard browser environment.
-    // Specifically not if we're in a web worker, or react-native.
-    if (utils.isStandardBrowserEnv()) {
-      var cookies = __webpack_require__("./node_modules/axios/lib/helpers/cookies.js");
+          // Clean up request
+            request = null;
+        };
 
       // Add xsrf header
-      var xsrfValue = (config.withCredentials || isURLSameOrigin(config.url)) && config.xsrfCookieName ?
-          cookies.read(config.xsrfCookieName) :
-          undefined;
+      // This is only done if running in a standard browser environment.
+      // Specifically not if we're in a web worker, or react-native.
+        if (utils.isStandardBrowserEnv()) {
+            var cookies = __webpack_require__("./node_modules/axios/lib/helpers/cookies.js");
 
-      if (xsrfValue) {
-        requestHeaders[config.xsrfHeaderName] = xsrfValue;
-      }
-    }
+          // Add xsrf header
+            var xsrfValue = (config.withCredentials || isURLSameOrigin(config.url)) && config.xsrfCookieName ?
+            cookies.read(config.xsrfCookieName) :
+            undefined;
 
-    // Add headers to the request
-    if ('setRequestHeader' in request) {
-      utils.forEach(requestHeaders, function setRequestHeader(val, key) {
-        if (typeof requestData === 'undefined' && key.toLowerCase() === 'content-type') {
-          // Remove Content-Type if data is undefined
-          delete requestHeaders[key];
-        } else {
-          // Otherwise add header to the request
-          request.setRequestHeader(key, val);
-        }
-      });
-    }
-
-    // Add withCredentials to request if needed
-    if (config.withCredentials) {
-      request.withCredentials = true;
-    }
-
-    // Add responseType to request if needed
-    if (config.responseType) {
-      try {
-        request.responseType = config.responseType;
-      } catch (e) {
-        // Expected DOMException thrown by browsers not compatible XMLHttpRequest Level 2.
-        // But, this can be suppressed for 'json' type as it can be parsed by default 'transformResponse' function.
-        if (config.responseType !== 'json') {
-          throw e;
-        }
-      }
-    }
-
-    // Handle progress if needed
-    if (typeof config.onDownloadProgress === 'function') {
-      request.addEventListener('progress', config.onDownloadProgress);
-    }
-
-    // Not all browsers support upload events
-    if (typeof config.onUploadProgress === 'function' && request.upload) {
-      request.upload.addEventListener('progress', config.onUploadProgress);
-    }
-
-    if (config.cancelToken) {
-      // Handle cancellation
-      config.cancelToken.promise.then(function onCanceled(cancel) {
-        if (!request) {
-          return;
+            if (xsrfValue) {
+                requestHeaders[config.xsrfHeaderName] = xsrfValue;
+            }
         }
 
-        request.abort();
-        reject(cancel);
-        // Clean up request
-        request = null;
-      });
-    }
+      // Add headers to the request
+        if ('setRequestHeader' in request) {
+            utils.forEach(requestHeaders, function setRequestHeader(val, key)
+            {
+                if (typeof requestData === 'undefined' && key.toLowerCase() === 'content-type') {
+                  // Remove Content-Type if data is undefined
+                    delete requestHeaders[key];
+                } else {
+                  // Otherwise add header to the request
+                    request.setRequestHeader(key, val);
+                }
+            });
+        }
 
-    if (requestData === undefined) {
-      requestData = null;
-    }
+      // Add withCredentials to request if needed
+        if (config.withCredentials) {
+            request.withCredentials = true;
+        }
 
-    // Send the request
-    request.send(requestData);
-  });
+      // Add responseType to request if needed
+        if (config.responseType) {
+            try {
+                request.responseType = config.responseType;
+            } catch (e) {
+                // Expected DOMException thrown by browsers not compatible XMLHttpRequest Level 2.
+                // But, this can be suppressed for 'json' type as it can be parsed by default 'transformResponse' function.
+                if (config.responseType !== 'json') {
+                    throw e;
+                }
+            }
+        }
+
+      // Handle progress if needed
+        if (typeof config.onDownloadProgress === 'function') {
+            request.addEventListener('progress', config.onDownloadProgress);
+        }
+
+      // Not all browsers support upload events
+        if (typeof config.onUploadProgress === 'function' && request.upload) {
+            request.upload.addEventListener('progress', config.onUploadProgress);
+        }
+
+        if (config.cancelToken) {
+          // Handle cancellation
+            config.cancelToken.promise.then(function onCanceled(cancel)
+            {
+                if (!request) {
+                    return;
+                }
+
+                request.abort();
+                reject(cancel);
+                // Clean up request
+                request = null;
+            });
+        }
+
+        if (requestData === undefined) {
+            requestData = null;
+        }
+
+      // Send the request
+        request.send(requestData);
+    });
 };
 
 
@@ -277,17 +290,18 @@ var defaults = __webpack_require__("./node_modules/axios/lib/defaults.js");
  * @param {Object} defaultConfig The default config for the instance
  * @return {Axios} A new instance of Axios
  */
-function createInstance(defaultConfig) {
-  var context = new Axios(defaultConfig);
-  var instance = bind(Axios.prototype.request, context);
+function createInstance(defaultConfig)
+{
+    var context = new Axios(defaultConfig);
+    var instance = bind(Axios.prototype.request, context);
 
   // Copy axios.prototype to instance
-  utils.extend(instance, Axios.prototype, context);
+    utils.extend(instance, Axios.prototype, context);
 
   // Copy context to instance
-  utils.extend(instance, context);
+    utils.extend(instance, context);
 
-  return instance;
+    return instance;
 }
 
 // Create the default instance to be exported
@@ -297,8 +311,9 @@ var axios = createInstance(defaults);
 axios.Axios = Axios;
 
 // Factory for creating new instances
-axios.create = function create(instanceConfig) {
-  return createInstance(utils.merge(defaults, instanceConfig));
+axios.create = function create(instanceConfig)
+{
+    return createInstance(utils.merge(defaults, instanceConfig));
 };
 
 // Expose Cancel & CancelToken
@@ -307,8 +322,9 @@ axios.CancelToken = __webpack_require__("./node_modules/axios/lib/cancel/CancelT
 axios.isCancel = __webpack_require__("./node_modules/axios/lib/cancel/isCancel.js");
 
 // Expose all/spread
-axios.all = function all(promises) {
-  return Promise.all(promises);
+axios.all = function all(promises)
+{
+    return Promise.all(promises);
 };
 axios.spread = __webpack_require__("./node_modules/axios/lib/helpers/spread.js");
 
@@ -332,12 +348,14 @@ module.exports.default = axios;
  * @class
  * @param {string=} message The message.
  */
-function Cancel(message) {
-  this.message = message;
+function Cancel(message)
+{
+    this.message = message;
 }
 
-Cancel.prototype.toString = function toString() {
-  return 'Cancel' + (this.message ? ': ' + this.message : '');
+Cancel.prototype.toString = function toString()
+{
+    return 'Cancel' + (this.message ? ': ' + this.message : '');
 };
 
 Cancel.prototype.__CANCEL__ = true;
@@ -361,50 +379,56 @@ var Cancel = __webpack_require__("./node_modules/axios/lib/cancel/Cancel.js");
  * @class
  * @param {Function} executor The executor function.
  */
-function CancelToken(executor) {
-  if (typeof executor !== 'function') {
-    throw new TypeError('executor must be a function.');
-  }
-
-  var resolvePromise;
-  this.promise = new Promise(function promiseExecutor(resolve) {
-    resolvePromise = resolve;
-  });
-
-  var token = this;
-  executor(function cancel(message) {
-    if (token.reason) {
-      // Cancellation has already been requested
-      return;
+function CancelToken(executor)
+{
+    if (typeof executor !== 'function') {
+        throw new TypeError('executor must be a function.');
     }
 
-    token.reason = new Cancel(message);
-    resolvePromise(token.reason);
-  });
+    var resolvePromise;
+    this.promise = new Promise(function promiseExecutor(resolve)
+    {
+        resolvePromise = resolve;
+    });
+
+    var token = this;
+    executor(function cancel(message)
+    {
+        if (token.reason) {
+          // Cancellation has already been requested
+            return;
+        }
+
+        token.reason = new Cancel(message);
+        resolvePromise(token.reason);
+    });
 }
 
 /**
  * Throws a `Cancel` if cancellation has been requested.
  */
-CancelToken.prototype.throwIfRequested = function throwIfRequested() {
-  if (this.reason) {
-    throw this.reason;
-  }
+CancelToken.prototype.throwIfRequested = function throwIfRequested()
+{
+    if (this.reason) {
+        throw this.reason;
+    }
 };
 
 /**
  * Returns an object that contains a new `CancelToken` and a function that, when called,
  * cancels the `CancelToken`.
  */
-CancelToken.source = function source() {
-  var cancel;
-  var token = new CancelToken(function executor(c) {
-    cancel = c;
-  });
-  return {
-    token: token,
-    cancel: cancel
-  };
+CancelToken.source = function source()
+{
+    var cancel;
+    var token = new CancelToken(function executor(c)
+    {
+        cancel = c;
+    });
+    return {
+        token: token,
+        cancel: cancel
+    };
 };
 
 module.exports = CancelToken;
@@ -418,8 +442,9 @@ module.exports = CancelToken;
 "use strict";
 
 
-module.exports = function isCancel(value) {
-  return !!(value && value.__CANCEL__);
+module.exports = function isCancel(value)
+{
+    return !!(value && value.__CANCEL__);
 };
 
 
@@ -441,12 +466,13 @@ var dispatchRequest = __webpack_require__("./node_modules/axios/lib/core/dispatc
  *
  * @param {Object} instanceConfig The default config for the instance
  */
-function Axios(instanceConfig) {
-  this.defaults = instanceConfig;
-  this.interceptors = {
-    request: new InterceptorManager(),
-    response: new InterceptorManager()
-  };
+function Axios(instanceConfig)
+{
+    this.defaults = instanceConfig;
+    this.interceptors = {
+        request: new InterceptorManager(),
+        response: new InterceptorManager()
+    };
 }
 
 /**
@@ -454,57 +480,62 @@ function Axios(instanceConfig) {
  *
  * @param {Object} config The config specific for this request (merged with this.defaults)
  */
-Axios.prototype.request = function request(config) {
+Axios.prototype.request = function request(config)
+{
   /*eslint no-param-reassign:0*/
   // Allow for axios('example/url'[, config]) a la fetch API
-  if (typeof config === 'string') {
-    config = utils.merge({
-      url: arguments[0]
-    }, arguments[1]);
-  }
+    if (typeof config === 'string') {
+        config = utils.merge({
+            url: arguments[0]
+        }, arguments[1]);
+    }
 
-  config = utils.merge(defaults, this.defaults, { method: 'get' }, config);
-  config.method = config.method.toLowerCase();
+    config = utils.merge(defaults, this.defaults, { method: 'get' }, config);
+    config.method = config.method.toLowerCase();
 
   // Hook up interceptors middleware
-  var chain = [dispatchRequest, undefined];
-  var promise = Promise.resolve(config);
+    var chain = [dispatchRequest, undefined];
+    var promise = Promise.resolve(config);
 
-  this.interceptors.request.forEach(function unshiftRequestInterceptors(interceptor) {
-    chain.unshift(interceptor.fulfilled, interceptor.rejected);
-  });
+    this.interceptors.request.forEach(function unshiftRequestInterceptors(interceptor)
+    {
+        chain.unshift(interceptor.fulfilled, interceptor.rejected);
+    });
 
-  this.interceptors.response.forEach(function pushResponseInterceptors(interceptor) {
-    chain.push(interceptor.fulfilled, interceptor.rejected);
-  });
+    this.interceptors.response.forEach(function pushResponseInterceptors(interceptor)
+    {
+        chain.push(interceptor.fulfilled, interceptor.rejected);
+    });
 
-  while (chain.length) {
-    promise = promise.then(chain.shift(), chain.shift());
-  }
+    while (chain.length) {
+        promise = promise.then(chain.shift(), chain.shift());
+    }
 
-  return promise;
+    return promise;
 };
 
 // Provide aliases for supported request methods
-utils.forEach(['delete', 'get', 'head', 'options'], function forEachMethodNoData(method) {
+utils.forEach(['delete', 'get', 'head', 'options'], function forEachMethodNoData(method)
+{
   /*eslint func-names:0*/
-  Axios.prototype[method] = function(url, config) {
-    return this.request(utils.merge(config || {}, {
-      method: method,
-      url: url
-    }));
-  };
+    Axios.prototype[method] = function (url, config) {
+        return this.request(utils.merge(config || {}, {
+            method: method,
+            url: url
+        }));
+    };
 });
 
-utils.forEach(['post', 'put', 'patch'], function forEachMethodWithData(method) {
+utils.forEach(['post', 'put', 'patch'], function forEachMethodWithData(method)
+{
   /*eslint func-names:0*/
-  Axios.prototype[method] = function(url, data, config) {
-    return this.request(utils.merge(config || {}, {
-      method: method,
-      url: url,
-      data: data
-    }));
-  };
+    Axios.prototype[method] = function (url, data, config) {
+        return this.request(utils.merge(config || {}, {
+            method: method,
+            url: url,
+            data: data
+        }));
+    };
 });
 
 module.exports = Axios;
@@ -520,8 +551,9 @@ module.exports = Axios;
 
 var utils = __webpack_require__("./node_modules/axios/lib/utils.js");
 
-function InterceptorManager() {
-  this.handlers = [];
+function InterceptorManager()
+{
+    this.handlers = [];
 }
 
 /**
@@ -532,12 +564,13 @@ function InterceptorManager() {
  *
  * @return {Number} An ID used to remove interceptor later
  */
-InterceptorManager.prototype.use = function use(fulfilled, rejected) {
-  this.handlers.push({
-    fulfilled: fulfilled,
-    rejected: rejected
-  });
-  return this.handlers.length - 1;
+InterceptorManager.prototype.use = function use(fulfilled, rejected)
+{
+    this.handlers.push({
+        fulfilled: fulfilled,
+        rejected: rejected
+    });
+    return this.handlers.length - 1;
 };
 
 /**
@@ -545,10 +578,11 @@ InterceptorManager.prototype.use = function use(fulfilled, rejected) {
  *
  * @param {Number} id The ID that was returned by `use`
  */
-InterceptorManager.prototype.eject = function eject(id) {
-  if (this.handlers[id]) {
-    this.handlers[id] = null;
-  }
+InterceptorManager.prototype.eject = function eject(id)
+{
+    if (this.handlers[id]) {
+        this.handlers[id] = null;
+    }
 };
 
 /**
@@ -559,12 +593,14 @@ InterceptorManager.prototype.eject = function eject(id) {
  *
  * @param {Function} fn The function to call for each interceptor
  */
-InterceptorManager.prototype.forEach = function forEach(fn) {
-  utils.forEach(this.handlers, function forEachHandler(h) {
-    if (h !== null) {
-      fn(h);
-    }
-  });
+InterceptorManager.prototype.forEach = function forEach(fn)
+{
+    utils.forEach(this.handlers, function forEachHandler(h)
+    {
+        if (h !== null) {
+            fn(h);
+        }
+    });
 };
 
 module.exports = InterceptorManager;
@@ -590,9 +626,10 @@ var enhanceError = __webpack_require__("./node_modules/axios/lib/core/enhanceErr
  * @param {Object} [response] The response.
  * @returns {Error} The created error.
  */
-module.exports = function createError(message, config, code, request, response) {
-  var error = new Error(message);
-  return enhanceError(error, config, code, request, response);
+module.exports = function createError(message, config, code, request, response)
+{
+    var error = new Error(message);
+    return enhanceError(error, config, code, request, response);
 };
 
 
@@ -708,14 +745,15 @@ module.exports = function dispatchRequest(config) {
  * @param {Object} [response] The response.
  * @returns {Error} The error.
  */
-module.exports = function enhanceError(error, config, code, request, response) {
-  error.config = config;
-  if (code) {
-    error.code = code;
-  }
-  error.request = request;
-  error.response = response;
-  return error;
+module.exports = function enhanceError(error, config, code, request, response)
+{
+    error.config = config;
+    if (code) {
+        error.code = code;
+    }
+    error.request = request;
+    error.response = response;
+    return error;
 };
 
 
@@ -736,20 +774,21 @@ var createError = __webpack_require__("./node_modules/axios/lib/core/createError
  * @param {Function} reject A function that rejects the promise.
  * @param {object} response The response.
  */
-module.exports = function settle(resolve, reject, response) {
-  var validateStatus = response.config.validateStatus;
+module.exports = function settle(resolve, reject, response)
+{
+    var validateStatus = response.config.validateStatus;
   // Note: status is not exposed by XDomainRequest
-  if (!response.status || !validateStatus || validateStatus(response.status)) {
-    resolve(response);
-  } else {
-    reject(createError(
-      'Request failed with status code ' + response.status,
-      response.config,
-      null,
-      response.request,
-      response
-    ));
-  }
+    if (!response.status || !validateStatus || validateStatus(response.status)) {
+        resolve(response);
+    } else {
+        reject(createError(
+            'Request failed with status code ' + response.status,
+            response.config,
+            null,
+            response.request,
+            response
+        ));
+    }
 };
 
 
@@ -771,13 +810,15 @@ var utils = __webpack_require__("./node_modules/axios/lib/utils.js");
  * @param {Array|Function} fns A single function or Array of functions
  * @returns {*} The resulting transformed data
  */
-module.exports = function transformData(data, headers, fns) {
+module.exports = function transformData(data, headers, fns)
+{
   /*eslint no-param-reassign:0*/
-  utils.forEach(fns, function transform(fn) {
-    data = fn(data, headers);
-  });
+    utils.forEach(fns, function transform(fn)
+    {
+        data = fn(data, headers);
+    });
 
-  return data;
+    return data;
 };
 
 
@@ -793,89 +834,97 @@ var utils = __webpack_require__("./node_modules/axios/lib/utils.js");
 var normalizeHeaderName = __webpack_require__("./node_modules/axios/lib/helpers/normalizeHeaderName.js");
 
 var DEFAULT_CONTENT_TYPE = {
-  'Content-Type': 'application/x-www-form-urlencoded'
+    'Content-Type': 'application/x-www-form-urlencoded'
 };
 
-function setContentTypeIfUnset(headers, value) {
-  if (!utils.isUndefined(headers) && utils.isUndefined(headers['Content-Type'])) {
-    headers['Content-Type'] = value;
-  }
+function setContentTypeIfUnset(headers, value)
+{
+    if (!utils.isUndefined(headers) && utils.isUndefined(headers['Content-Type'])) {
+        headers['Content-Type'] = value;
+    }
 }
 
-function getDefaultAdapter() {
-  var adapter;
-  if (typeof XMLHttpRequest !== 'undefined') {
-    // For browsers use XHR adapter
-    adapter = __webpack_require__("./node_modules/axios/lib/adapters/xhr.js");
-  } else if (typeof process !== 'undefined') {
-    // For node use HTTP adapter
-    adapter = __webpack_require__("./node_modules/axios/lib/adapters/xhr.js");
-  }
-  return adapter;
+function getDefaultAdapter()
+{
+    var adapter;
+    if (typeof XMLHttpRequest !== 'undefined') {
+      // For browsers use XHR adapter
+        adapter = __webpack_require__("./node_modules/axios/lib/adapters/xhr.js");
+    } else if (typeof process !== 'undefined') {
+      // For node use HTTP adapter
+        adapter = __webpack_require__("./node_modules/axios/lib/adapters/xhr.js");
+    }
+    return adapter;
 }
 
 var defaults = {
-  adapter: getDefaultAdapter(),
+    adapter: getDefaultAdapter(),
 
-  transformRequest: [function transformRequest(data, headers) {
-    normalizeHeaderName(headers, 'Content-Type');
-    if (utils.isFormData(data) ||
-      utils.isArrayBuffer(data) ||
-      utils.isBuffer(data) ||
-      utils.isStream(data) ||
-      utils.isFile(data) ||
-      utils.isBlob(data)
-    ) {
-      return data;
+    transformRequest: [function transformRequest(data, headers)
+    {
+        normalizeHeaderName(headers, 'Content-Type');
+        if (utils.isFormData(data) ||
+        utils.isArrayBuffer(data) ||
+        utils.isBuffer(data) ||
+        utils.isStream(data) ||
+        utils.isFile(data) ||
+        utils.isBlob(data)
+        ) {
+            return data;
+        }
+        if (utils.isArrayBufferView(data)) {
+            return data.buffer;
+        }
+        if (utils.isURLSearchParams(data)) {
+            setContentTypeIfUnset(headers, 'application/x-www-form-urlencoded;charset=utf-8');
+            return data.toString();
+        }
+        if (utils.isObject(data)) {
+            setContentTypeIfUnset(headers, 'application/json;charset=utf-8');
+            return JSON.stringify(data);
+        }
+        return data;
+    }],
+
+    transformResponse: [function transformResponse(data)
+    {
+      /*eslint no-param-reassign:0*/
+        if (typeof data === 'string') {
+            try {
+                data = JSON.parse(data);
+            } catch (e) {
+    /* Ignore */ }
+        }
+        return data;
+    }],
+
+    timeout: 0,
+
+    xsrfCookieName: 'XSRF-TOKEN',
+    xsrfHeaderName: 'X-XSRF-TOKEN',
+
+    maxContentLength: -1,
+
+    validateStatus: function validateStatus(status)
+    {
+        return status >= 200 && status < 300;
     }
-    if (utils.isArrayBufferView(data)) {
-      return data.buffer;
-    }
-    if (utils.isURLSearchParams(data)) {
-      setContentTypeIfUnset(headers, 'application/x-www-form-urlencoded;charset=utf-8');
-      return data.toString();
-    }
-    if (utils.isObject(data)) {
-      setContentTypeIfUnset(headers, 'application/json;charset=utf-8');
-      return JSON.stringify(data);
-    }
-    return data;
-  }],
-
-  transformResponse: [function transformResponse(data) {
-    /*eslint no-param-reassign:0*/
-    if (typeof data === 'string') {
-      try {
-        data = JSON.parse(data);
-      } catch (e) { /* Ignore */ }
-    }
-    return data;
-  }],
-
-  timeout: 0,
-
-  xsrfCookieName: 'XSRF-TOKEN',
-  xsrfHeaderName: 'X-XSRF-TOKEN',
-
-  maxContentLength: -1,
-
-  validateStatus: function validateStatus(status) {
-    return status >= 200 && status < 300;
-  }
 };
 
 defaults.headers = {
-  common: {
-    'Accept': 'application/json, text/plain, */*'
-  }
+    common: {
+        'Accept': 'application/json, text/plain, */*'
+    }
 };
 
-utils.forEach(['delete', 'get', 'head'], function forEachMethodNoData(method) {
-  defaults.headers[method] = {};
+utils.forEach(['delete', 'get', 'head'], function forEachMethodNoData(method)
+{
+    defaults.headers[method] = {};
 });
 
-utils.forEach(['post', 'put', 'patch'], function forEachMethodWithData(method) {
-  defaults.headers[method] = utils.merge(DEFAULT_CONTENT_TYPE);
+utils.forEach(['post', 'put', 'patch'], function forEachMethodWithData(method)
+{
+    defaults.headers[method] = utils.merge(DEFAULT_CONTENT_TYPE);
 });
 
 module.exports = defaults;
@@ -890,14 +939,16 @@ module.exports = defaults;
 "use strict";
 
 
-module.exports = function bind(fn, thisArg) {
-  return function wrap() {
-    var args = new Array(arguments.length);
-    for (var i = 0; i < args.length; i++) {
-      args[i] = arguments[i];
-    }
-    return fn.apply(thisArg, args);
-  };
+module.exports = function bind(fn, thisArg)
+{
+    return function wrap()
+    {
+        var args = new Array(arguments.length);
+        for (var i = 0; i < args.length; i++) {
+            args[i] = arguments[i];
+        }
+        return fn.apply(thisArg, args);
+    };
 };
 
 
@@ -913,33 +964,33 @@ module.exports = function bind(fn, thisArg) {
 
 var chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';
 
-function E() {
-  this.message = 'String contains an invalid character';
+function E()
+{
+    this.message = 'String contains an invalid character';
 }
 E.prototype = new Error;
 E.prototype.code = 5;
 E.prototype.name = 'InvalidCharacterError';
 
-function btoa(input) {
-  var str = String(input);
-  var output = '';
-  for (
-    // initialize result and counter
+function btoa(input)
+{
+    var str = String(input);
+    var output = '';
+    for (// initialize result and counter
     var block, charCode, idx = 0, map = chars;
     // if the next str index does not exist:
     //   change the mapping table to "="
     //   check if d has no fractional digits
     str.charAt(idx | 0) || (map = '=', idx % 1);
     // "8 - idx % 1 * 8" generates the sequence 2, 4, 6, 8
-    output += map.charAt(63 & block >> 8 - idx % 1 * 8)
-  ) {
-    charCode = str.charCodeAt(idx += 3 / 4);
-    if (charCode > 0xFF) {
-      throw new E();
+    output += map.charAt(63 & block >> 8 - idx % 1 * 8)) {
+        charCode = str.charCodeAt(idx += 3 / 4);
+        if (charCode > 0xFF) {
+            throw new E();
+        }
+        block = block << 8 | charCode;
     }
-    block = block << 8 | charCode;
-  }
-  return output;
+    return output;
 }
 
 module.exports = btoa;
@@ -955,8 +1006,9 @@ module.exports = btoa;
 
 var utils = __webpack_require__("./node_modules/axios/lib/utils.js");
 
-function encode(val) {
-  return encodeURIComponent(val).
+function encode(val)
+{
+    return encodeURIComponent(val).
     replace(/%40/gi, '@').
     replace(/%3A/gi, ':').
     replace(/%24/g, '$').
@@ -973,51 +1025,54 @@ function encode(val) {
  * @param {object} [params] The params to be appended
  * @returns {string} The formatted url
  */
-module.exports = function buildURL(url, params, paramsSerializer) {
+module.exports = function buildURL(url, params, paramsSerializer)
+{
   /*eslint no-param-reassign:0*/
-  if (!params) {
+    if (!params) {
+        return url;
+    }
+
+    var serializedParams;
+    if (paramsSerializer) {
+        serializedParams = paramsSerializer(params);
+    } else if (utils.isURLSearchParams(params)) {
+        serializedParams = params.toString();
+    } else {
+        var parts = [];
+
+        utils.forEach(params, function serialize(val, key)
+        {
+            if (val === null || typeof val === 'undefined') {
+                return;
+            }
+
+            if (utils.isArray(val)) {
+                key = key + '[]';
+            }
+
+            if (!utils.isArray(val)) {
+                val = [val];
+            }
+
+            utils.forEach(val, function parseValue(v)
+            {
+                if (utils.isDate(v)) {
+                    v = v.toISOString();
+                } else if (utils.isObject(v)) {
+                    v = JSON.stringify(v);
+                }
+                parts.push(encode(key) + '=' + encode(v));
+            });
+        });
+
+        serializedParams = parts.join('&');
+    }
+
+    if (serializedParams) {
+        url += (url.indexOf('?') === -1 ? '?' : '&') + serializedParams;
+    }
+
     return url;
-  }
-
-  var serializedParams;
-  if (paramsSerializer) {
-    serializedParams = paramsSerializer(params);
-  } else if (utils.isURLSearchParams(params)) {
-    serializedParams = params.toString();
-  } else {
-    var parts = [];
-
-    utils.forEach(params, function serialize(val, key) {
-      if (val === null || typeof val === 'undefined') {
-        return;
-      }
-
-      if (utils.isArray(val)) {
-        key = key + '[]';
-      }
-
-      if (!utils.isArray(val)) {
-        val = [val];
-      }
-
-      utils.forEach(val, function parseValue(v) {
-        if (utils.isDate(v)) {
-          v = v.toISOString();
-        } else if (utils.isObject(v)) {
-          v = JSON.stringify(v);
-        }
-        parts.push(encode(key) + '=' + encode(v));
-      });
-    });
-
-    serializedParams = parts.join('&');
-  }
-
-  if (serializedParams) {
-    url += (url.indexOf('?') === -1 ? '?' : '&') + serializedParams;
-  }
-
-  return url;
 };
 
 
@@ -1036,8 +1091,9 @@ module.exports = function buildURL(url, params, paramsSerializer) {
  * @param {string} relativeURL The relative URL
  * @returns {string} The combined URL
  */
-module.exports = function combineURLs(baseURL, relativeURL) {
-  return relativeURL
+module.exports = function combineURLs(baseURL, relativeURL)
+{
+    return relativeURL
     ? baseURL.replace(/\/+$/, '') + '/' + relativeURL.replace(/^\/+/, '')
     : baseURL;
 };
@@ -1057,50 +1113,59 @@ module.exports = (
   utils.isStandardBrowserEnv() ?
 
   // Standard browser envs support document.cookie
-  (function standardBrowserEnv() {
+  (function standardBrowserEnv()
+  {
     return {
-      write: function write(name, value, expires, path, domain, secure) {
-        var cookie = [];
-        cookie.push(name + '=' + encodeURIComponent(value));
+        write: function write(name, value, expires, path, domain, secure)
+        {
+            var cookie = [];
+            cookie.push(name + '=' + encodeURIComponent(value));
 
-        if (utils.isNumber(expires)) {
-          cookie.push('expires=' + new Date(expires).toGMTString());
+            if (utils.isNumber(expires)) {
+                cookie.push('expires=' + new Date(expires).toGMTString());
+            }
+
+            if (utils.isString(path)) {
+                cookie.push('path=' + path);
+            }
+
+            if (utils.isString(domain)) {
+                cookie.push('domain=' + domain);
+            }
+
+            if (secure === true) {
+                cookie.push('secure');
+            }
+
+            document.cookie = cookie.join('; ');
+        },
+
+        read: function read(name)
+        {
+            var match = document.cookie.match(new RegExp('(^|;\\s*)(' + name + ')=([^;]*)'));
+            return (match ? decodeURIComponent(match[3]) : null);
+        },
+
+        remove: function remove(name)
+        {
+            this.write(name, '', Date.now() - 86400000);
         }
-
-        if (utils.isString(path)) {
-          cookie.push('path=' + path);
-        }
-
-        if (utils.isString(domain)) {
-          cookie.push('domain=' + domain);
-        }
-
-        if (secure === true) {
-          cookie.push('secure');
-        }
-
-        document.cookie = cookie.join('; ');
-      },
-
-      read: function read(name) {
-        var match = document.cookie.match(new RegExp('(^|;\\s*)(' + name + ')=([^;]*)'));
-        return (match ? decodeURIComponent(match[3]) : null);
-      },
-
-      remove: function remove(name) {
-        this.write(name, '', Date.now() - 86400000);
-      }
-    };
-  })() :
+        };
+    })() :
 
   // Non standard browser env (web workers, react-native) lack needed support.
-  (function nonStandardBrowserEnv() {
+  (function nonStandardBrowserEnv()
+  {
     return {
-      write: function write() {},
-      read: function read() { return null; },
-      remove: function remove() {}
-    };
-  })()
+        write: function write()
+        {},
+        read: function read()
+        {
+            return null; },
+        remove: function remove()
+        {}
+        };
+    })()
 );
 
 
@@ -1118,11 +1183,12 @@ module.exports = (
  * @param {string} url The URL to test
  * @returns {boolean} True if the specified URL is absolute, otherwise false
  */
-module.exports = function isAbsoluteURL(url) {
+module.exports = function isAbsoluteURL(url)
+{
   // A URL is considered absolute if it begins with "<scheme>://" or "//" (protocol-relative URL).
   // RFC 3986 defines scheme name as a sequence of characters beginning with a letter and followed
   // by any combination of letters, digits, plus, period, or hyphen.
-  return /^([a-z][a-z\d\+\-\.]*:)?\/\//i.test(url);
+    return /^([a-z][a-z\d\+\-\.]*:)?\/\//i.test(url);
 };
 
 
@@ -1141,7 +1207,8 @@ module.exports = (
 
   // Standard browser envs have full support of the APIs needed to test
   // whether the request URL is of the same origin as current location.
-  (function standardBrowserEnv() {
+  (function standardBrowserEnv()
+  {
     var msie = /(msie|trident)/i.test(navigator.userAgent);
     var urlParsingNode = document.createElement('a');
     var originURL;
@@ -1152,30 +1219,31 @@ module.exports = (
     * @param {String} url The URL to be parsed
     * @returns {Object}
     */
-    function resolveURL(url) {
-      var href = url;
+    function resolveURL(url)
+    {
+        var href = url;
 
-      if (msie) {
-        // IE needs attribute set twice to normalize properties
+        if (msie) {
+          // IE needs attribute set twice to normalize properties
+            urlParsingNode.setAttribute('href', href);
+            href = urlParsingNode.href;
+        }
+
         urlParsingNode.setAttribute('href', href);
-        href = urlParsingNode.href;
-      }
-
-      urlParsingNode.setAttribute('href', href);
 
       // urlParsingNode provides the UrlUtils interface - http://url.spec.whatwg.org/#urlutils
-      return {
-        href: urlParsingNode.href,
-        protocol: urlParsingNode.protocol ? urlParsingNode.protocol.replace(/:$/, '') : '',
-        host: urlParsingNode.host,
-        search: urlParsingNode.search ? urlParsingNode.search.replace(/^\?/, '') : '',
-        hash: urlParsingNode.hash ? urlParsingNode.hash.replace(/^#/, '') : '',
-        hostname: urlParsingNode.hostname,
-        port: urlParsingNode.port,
-        pathname: (urlParsingNode.pathname.charAt(0) === '/') ?
+        return {
+            href: urlParsingNode.href,
+            protocol: urlParsingNode.protocol ? urlParsingNode.protocol.replace(/:$/, '') : '',
+            host: urlParsingNode.host,
+            search: urlParsingNode.search ? urlParsingNode.search.replace(/^\?/, '') : '',
+            hash: urlParsingNode.hash ? urlParsingNode.hash.replace(/^#/, '') : '',
+            hostname: urlParsingNode.hostname,
+            port: urlParsingNode.port,
+            pathname: (urlParsingNode.pathname.charAt(0) === '/') ?
                   urlParsingNode.pathname :
                   '/' + urlParsingNode.pathname
-      };
+        };
     }
 
     originURL = resolveURL(window.location.href);
@@ -1186,19 +1254,22 @@ module.exports = (
     * @param {String} requestURL The URL to test
     * @returns {boolean} True if URL shares the same origin, otherwise false
     */
-    return function isURLSameOrigin(requestURL) {
-      var parsed = (utils.isString(requestURL)) ? resolveURL(requestURL) : requestURL;
-      return (parsed.protocol === originURL.protocol &&
+    return function isURLSameOrigin(requestURL)
+    {
+        var parsed = (utils.isString(requestURL)) ? resolveURL(requestURL) : requestURL;
+        return (parsed.protocol === originURL.protocol &&
             parsed.host === originURL.host);
     };
-  })() :
+    })() :
 
   // Non standard browser envs (web workers, react-native) lack needed support.
-  (function nonStandardBrowserEnv() {
-    return function isURLSameOrigin() {
-      return true;
+  (function nonStandardBrowserEnv()
+  {
+    return function isURLSameOrigin()
+    {
+        return true;
     };
-  })()
+    })()
 );
 
 
@@ -1212,13 +1283,15 @@ module.exports = (
 
 var utils = __webpack_require__("./node_modules/axios/lib/utils.js");
 
-module.exports = function normalizeHeaderName(headers, normalizedName) {
-  utils.forEach(headers, function processHeader(value, name) {
-    if (name !== normalizedName && name.toUpperCase() === normalizedName.toUpperCase()) {
-      headers[normalizedName] = value;
-      delete headers[name];
-    }
-  });
+module.exports = function normalizeHeaderName(headers, normalizedName)
+{
+    utils.forEach(headers, function processHeader(value, name)
+    {
+        if (name !== normalizedName && name.toUpperCase() === normalizedName.toUpperCase()) {
+            headers[normalizedName] = value;
+            delete headers[name];
+        }
+    });
 };
 
 
@@ -1254,32 +1327,35 @@ var ignoreDuplicateOf = [
  * @param {String} headers Headers needing to be parsed
  * @returns {Object} Headers parsed into an object
  */
-module.exports = function parseHeaders(headers) {
-  var parsed = {};
-  var key;
-  var val;
-  var i;
+module.exports = function parseHeaders(headers)
+{
+    var parsed = {};
+    var key;
+    var val;
+    var i;
 
-  if (!headers) { return parsed; }
+    if (!headers) {
+        return parsed; }
 
-  utils.forEach(headers.split('\n'), function parser(line) {
-    i = line.indexOf(':');
-    key = utils.trim(line.substr(0, i)).toLowerCase();
-    val = utils.trim(line.substr(i + 1));
+    utils.forEach(headers.split('\n'), function parser(line)
+    {
+        i = line.indexOf(':');
+        key = utils.trim(line.substr(0, i)).toLowerCase();
+        val = utils.trim(line.substr(i + 1));
 
-    if (key) {
-      if (parsed[key] && ignoreDuplicateOf.indexOf(key) >= 0) {
-        return;
-      }
-      if (key === 'set-cookie') {
-        parsed[key] = (parsed[key] ? parsed[key] : []).concat([val]);
-      } else {
-        parsed[key] = parsed[key] ? parsed[key] + ', ' + val : val;
-      }
-    }
-  });
+        if (key) {
+            if (parsed[key] && ignoreDuplicateOf.indexOf(key) >= 0) {
+                return;
+            }
+            if (key === 'set-cookie') {
+                parsed[key] = (parsed[key] ? parsed[key] : []).concat([val]);
+            } else {
+                parsed[key] = parsed[key] ? parsed[key] + ', ' + val : val;
+            }
+        }
+    });
 
-  return parsed;
+    return parsed;
 };
 
 
@@ -1311,10 +1387,12 @@ module.exports = function parseHeaders(headers) {
  * @param {Function} callback
  * @returns {Function}
  */
-module.exports = function spread(callback) {
-  return function wrap(arr) {
-    return callback.apply(null, arr);
-  };
+module.exports = function spread(callback)
+{
+    return function wrap(arr)
+    {
+        return callback.apply(null, arr);
+    };
 };
 
 
@@ -1341,8 +1419,9 @@ var toString = Object.prototype.toString;
  * @param {Object} val The value to test
  * @returns {boolean} True if value is an Array, otherwise false
  */
-function isArray(val) {
-  return toString.call(val) === '[object Array]';
+function isArray(val)
+{
+    return toString.call(val) === '[object Array]';
 }
 
 /**
@@ -1351,8 +1430,9 @@ function isArray(val) {
  * @param {Object} val The value to test
  * @returns {boolean} True if value is an ArrayBuffer, otherwise false
  */
-function isArrayBuffer(val) {
-  return toString.call(val) === '[object ArrayBuffer]';
+function isArrayBuffer(val)
+{
+    return toString.call(val) === '[object ArrayBuffer]';
 }
 
 /**
@@ -1361,8 +1441,9 @@ function isArrayBuffer(val) {
  * @param {Object} val The value to test
  * @returns {boolean} True if value is an FormData, otherwise false
  */
-function isFormData(val) {
-  return (typeof FormData !== 'undefined') && (val instanceof FormData);
+function isFormData(val)
+{
+    return (typeof FormData !== 'undefined') && (val instanceof FormData);
 }
 
 /**
@@ -1371,14 +1452,15 @@ function isFormData(val) {
  * @param {Object} val The value to test
  * @returns {boolean} True if value is a view on an ArrayBuffer, otherwise false
  */
-function isArrayBufferView(val) {
-  var result;
-  if ((typeof ArrayBuffer !== 'undefined') && (ArrayBuffer.isView)) {
-    result = ArrayBuffer.isView(val);
-  } else {
-    result = (val) && (val.buffer) && (val.buffer instanceof ArrayBuffer);
-  }
-  return result;
+function isArrayBufferView(val)
+{
+    var result;
+    if ((typeof ArrayBuffer !== 'undefined') && (ArrayBuffer.isView)) {
+        result = ArrayBuffer.isView(val);
+    } else {
+        result = (val) && (val.buffer) && (val.buffer instanceof ArrayBuffer);
+    }
+    return result;
 }
 
 /**
@@ -1387,8 +1469,9 @@ function isArrayBufferView(val) {
  * @param {Object} val The value to test
  * @returns {boolean} True if value is a String, otherwise false
  */
-function isString(val) {
-  return typeof val === 'string';
+function isString(val)
+{
+    return typeof val === 'string';
 }
 
 /**
@@ -1397,8 +1480,9 @@ function isString(val) {
  * @param {Object} val The value to test
  * @returns {boolean} True if value is a Number, otherwise false
  */
-function isNumber(val) {
-  return typeof val === 'number';
+function isNumber(val)
+{
+    return typeof val === 'number';
 }
 
 /**
@@ -1407,8 +1491,9 @@ function isNumber(val) {
  * @param {Object} val The value to test
  * @returns {boolean} True if the value is undefined, otherwise false
  */
-function isUndefined(val) {
-  return typeof val === 'undefined';
+function isUndefined(val)
+{
+    return typeof val === 'undefined';
 }
 
 /**
@@ -1417,8 +1502,9 @@ function isUndefined(val) {
  * @param {Object} val The value to test
  * @returns {boolean} True if value is an Object, otherwise false
  */
-function isObject(val) {
-  return val !== null && typeof val === 'object';
+function isObject(val)
+{
+    return val !== null && typeof val === 'object';
 }
 
 /**
@@ -1427,8 +1513,9 @@ function isObject(val) {
  * @param {Object} val The value to test
  * @returns {boolean} True if value is a Date, otherwise false
  */
-function isDate(val) {
-  return toString.call(val) === '[object Date]';
+function isDate(val)
+{
+    return toString.call(val) === '[object Date]';
 }
 
 /**
@@ -1437,8 +1524,9 @@ function isDate(val) {
  * @param {Object} val The value to test
  * @returns {boolean} True if value is a File, otherwise false
  */
-function isFile(val) {
-  return toString.call(val) === '[object File]';
+function isFile(val)
+{
+    return toString.call(val) === '[object File]';
 }
 
 /**
@@ -1447,8 +1535,9 @@ function isFile(val) {
  * @param {Object} val The value to test
  * @returns {boolean} True if value is a Blob, otherwise false
  */
-function isBlob(val) {
-  return toString.call(val) === '[object Blob]';
+function isBlob(val)
+{
+    return toString.call(val) === '[object Blob]';
 }
 
 /**
@@ -1457,8 +1546,9 @@ function isBlob(val) {
  * @param {Object} val The value to test
  * @returns {boolean} True if value is a Function, otherwise false
  */
-function isFunction(val) {
-  return toString.call(val) === '[object Function]';
+function isFunction(val)
+{
+    return toString.call(val) === '[object Function]';
 }
 
 /**
@@ -1467,8 +1557,9 @@ function isFunction(val) {
  * @param {Object} val The value to test
  * @returns {boolean} True if value is a Stream, otherwise false
  */
-function isStream(val) {
-  return isObject(val) && isFunction(val.pipe);
+function isStream(val)
+{
+    return isObject(val) && isFunction(val.pipe);
 }
 
 /**
@@ -1477,8 +1568,9 @@ function isStream(val) {
  * @param {Object} val The value to test
  * @returns {boolean} True if value is a URLSearchParams object, otherwise false
  */
-function isURLSearchParams(val) {
-  return typeof URLSearchParams !== 'undefined' && val instanceof URLSearchParams;
+function isURLSearchParams(val)
+{
+    return typeof URLSearchParams !== 'undefined' && val instanceof URLSearchParams;
 }
 
 /**
@@ -1487,8 +1579,9 @@ function isURLSearchParams(val) {
  * @param {String} str The String to trim
  * @returns {String} The String freed of excess whitespace
  */
-function trim(str) {
-  return str.replace(/^\s*/, '').replace(/\s*$/, '');
+function trim(str)
+{
+    return str.replace(/^\s*/, '').replace(/\s*$/, '');
 }
 
 /**
@@ -1504,14 +1597,15 @@ function trim(str) {
  * react-native:
  *  navigator.product -> 'ReactNative'
  */
-function isStandardBrowserEnv() {
-  if (typeof navigator !== 'undefined' && navigator.product === 'ReactNative') {
-    return false;
-  }
-  return (
+function isStandardBrowserEnv()
+{
+    if (typeof navigator !== 'undefined' && navigator.product === 'ReactNative') {
+        return false;
+    }
+    return (
     typeof window !== 'undefined' &&
     typeof document !== 'undefined'
-  );
+    );
 }
 
 /**
@@ -1526,31 +1620,32 @@ function isStandardBrowserEnv() {
  * @param {Object|Array} obj The object to iterate
  * @param {Function} fn The callback to invoke for each item
  */
-function forEach(obj, fn) {
+function forEach(obj, fn)
+{
   // Don't bother if no value provided
-  if (obj === null || typeof obj === 'undefined') {
-    return;
-  }
+    if (obj === null || typeof obj === 'undefined') {
+        return;
+    }
 
   // Force an array if not already something iterable
-  if (typeof obj !== 'object') {
-    /*eslint no-param-reassign:0*/
-    obj = [obj];
-  }
+    if (typeof obj !== 'object') {
+      /*eslint no-param-reassign:0*/
+        obj = [obj];
+    }
 
-  if (isArray(obj)) {
-    // Iterate over array values
-    for (var i = 0, l = obj.length; i < l; i++) {
-      fn.call(null, obj[i], i, obj);
+    if (isArray(obj)) {
+      // Iterate over array values
+        for (var i = 0, l = obj.length; i < l; i++) {
+            fn.call(null, obj[i], i, obj);
+        }
+    } else {
+      // Iterate over object keys
+        for (var key in obj) {
+            if (Object.prototype.hasOwnProperty.call(obj, key)) {
+                fn.call(null, obj[key], key, obj);
+            }
+        }
     }
-  } else {
-    // Iterate over object keys
-    for (var key in obj) {
-      if (Object.prototype.hasOwnProperty.call(obj, key)) {
-        fn.call(null, obj[key], key, obj);
-      }
-    }
-  }
 }
 
 /**
@@ -1570,20 +1665,22 @@ function forEach(obj, fn) {
  * @param {Object} obj1 Object to merge
  * @returns {Object} Result of all merge properties
  */
-function merge(/* obj1, obj2, obj3, ... */) {
-  var result = {};
-  function assignValue(val, key) {
-    if (typeof result[key] === 'object' && typeof val === 'object') {
-      result[key] = merge(result[key], val);
-    } else {
-      result[key] = val;
+function merge(/* obj1, obj2, obj3, ... */)
+{
+    var result = {};
+    function assignValue(val, key)
+    {
+        if (typeof result[key] === 'object' && typeof val === 'object') {
+            result[key] = merge(result[key], val);
+        } else {
+            result[key] = val;
+        }
     }
-  }
 
-  for (var i = 0, l = arguments.length; i < l; i++) {
-    forEach(arguments[i], assignValue);
-  }
-  return result;
+    for (var i = 0, l = arguments.length; i < l; i++) {
+        forEach(arguments[i], assignValue);
+    }
+    return result;
 }
 
 /**
@@ -1594,38 +1691,40 @@ function merge(/* obj1, obj2, obj3, ... */) {
  * @param {Object} thisArg The object to bind function to
  * @return {Object} The resulting value of object a
  */
-function extend(a, b, thisArg) {
-  forEach(b, function assignValue(val, key) {
-    if (thisArg && typeof val === 'function') {
-      a[key] = bind(val, thisArg);
-    } else {
-      a[key] = val;
-    }
-  });
-  return a;
+function extend(a, b, thisArg)
+{
+    forEach(b, function assignValue(val, key)
+    {
+        if (thisArg && typeof val === 'function') {
+            a[key] = bind(val, thisArg);
+        } else {
+            a[key] = val;
+        }
+    });
+    return a;
 }
 
 module.exports = {
-  isArray: isArray,
-  isArrayBuffer: isArrayBuffer,
-  isBuffer: isBuffer,
-  isFormData: isFormData,
-  isArrayBufferView: isArrayBufferView,
-  isString: isString,
-  isNumber: isNumber,
-  isObject: isObject,
-  isUndefined: isUndefined,
-  isDate: isDate,
-  isFile: isFile,
-  isBlob: isBlob,
-  isFunction: isFunction,
-  isStream: isStream,
-  isURLSearchParams: isURLSearchParams,
-  isStandardBrowserEnv: isStandardBrowserEnv,
-  forEach: forEach,
-  merge: merge,
-  extend: extend,
-  trim: trim
+    isArray: isArray,
+    isArrayBuffer: isArrayBuffer,
+    isBuffer: isBuffer,
+    isFormData: isFormData,
+    isArrayBufferView: isArrayBufferView,
+    isString: isString,
+    isNumber: isNumber,
+    isObject: isObject,
+    isUndefined: isUndefined,
+    isDate: isDate,
+    isFile: isFile,
+    isBlob: isBlob,
+    isFunction: isFunction,
+    isStream: isStream,
+    isURLSearchParams: isURLSearchParams,
+    isStandardBrowserEnv: isStandardBrowserEnv,
+    forEach: forEach,
+    merge: merge,
+    extend: extend,
+    trim: trim
 };
 
 
@@ -8016,16 +8115,18 @@ module.exports = {
 // The _isBuffer check is for Safari 5-7 support, because it's missing
 // Object.prototype.constructor. Remove this eventually
 module.exports = function (obj) {
-  return obj != null && (isBuffer(obj) || isSlowBuffer(obj) || !!obj._isBuffer)
+    return obj != null && (isBuffer(obj) || isSlowBuffer(obj) || !!obj._isBuffer)
 }
 
-function isBuffer (obj) {
-  return !!obj.constructor && typeof obj.constructor.isBuffer === 'function' && obj.constructor.isBuffer(obj)
+function isBuffer(obj)
+{
+    return !!obj.constructor && typeof obj.constructor.isBuffer === 'function' && obj.constructor.isBuffer(obj)
 }
 
 // For Node v0.10 support. Remove this eventually.
-function isSlowBuffer (obj) {
-  return typeof obj.readFloatLE === 'function' && typeof obj.slice === 'function' && isBuffer(obj.slice(0, 0))
+function isSlowBuffer(obj)
+{
+    return typeof obj.readFloatLE === 'function' && typeof obj.slice === 'function' && isBuffer(obj.slice(0, 0))
 }
 
 
@@ -35533,10 +35634,12 @@ var process = module.exports = {};
 var cachedSetTimeout;
 var cachedClearTimeout;
 
-function defaultSetTimout() {
+function defaultSetTimout()
+{
     throw new Error('setTimeout has not been defined');
 }
-function defaultClearTimeout () {
+function defaultClearTimeout()
+{
     throw new Error('clearTimeout has not been defined');
 }
 (function () {
@@ -35559,7 +35662,8 @@ function defaultClearTimeout () {
         cachedClearTimeout = defaultClearTimeout;
     }
 } ())
-function runTimeout(fun) {
+function runTimeout(fun)
+{
     if (cachedSetTimeout === setTimeout) {
         //normal enviroments in sane situations
         return setTimeout(fun, 0);
@@ -35572,11 +35676,11 @@ function runTimeout(fun) {
     try {
         // when when somebody has screwed with setTimeout but no I.E. maddness
         return cachedSetTimeout(fun, 0);
-    } catch(e){
+    } catch (e) {
         try {
             // When we are in I.E. but the script has been evaled so I.E. doesn't trust the global object when called normally
             return cachedSetTimeout.call(null, fun, 0);
-        } catch(e){
+        } catch (e) {
             // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error
             return cachedSetTimeout.call(this, fun, 0);
         }
@@ -35584,7 +35688,8 @@ function runTimeout(fun) {
 
 
 }
-function runClearTimeout(marker) {
+function runClearTimeout(marker)
+{
     if (cachedClearTimeout === clearTimeout) {
         //normal enviroments in sane situations
         return clearTimeout(marker);
@@ -35597,11 +35702,11 @@ function runClearTimeout(marker) {
     try {
         // when when somebody has screwed with setTimeout but no I.E. maddness
         return cachedClearTimeout(marker);
-    } catch (e){
+    } catch (e) {
         try {
             // When we are in I.E. but the script has been evaled so I.E. doesn't  trust the global object when called normally
             return cachedClearTimeout.call(null, marker);
-        } catch (e){
+        } catch (e) {
             // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error.
             // Some versions of I.E. have different rules for clearTimeout vs setTimeout
             return cachedClearTimeout.call(this, marker);
@@ -35616,7 +35721,8 @@ var draining = false;
 var currentQueue;
 var queueIndex = -1;
 
-function cleanUpNextTick() {
+function cleanUpNextTick()
+{
     if (!draining || !currentQueue) {
         return;
     }
@@ -35631,7 +35737,8 @@ function cleanUpNextTick() {
     }
 }
 
-function drainQueue() {
+function drainQueue()
+{
     if (draining) {
         return;
     }
@@ -35639,7 +35746,7 @@ function drainQueue() {
     draining = true;
 
     var len = queue.length;
-    while(len) {
+    while (len) {
         currentQueue = queue;
         queue = [];
         while (++queueIndex < len) {
@@ -35669,7 +35776,8 @@ process.nextTick = function (fun) {
 };
 
 // v8 likes predictible objects
-function Item(fun, array) {
+function Item(fun, array)
+{
     this.fun = fun;
     this.array = array;
 }
@@ -35683,7 +35791,8 @@ process.argv = [];
 process.version = ''; // empty string to avoid regexp issues
 process.versions = {};
 
-function noop() {}
+function noop()
+{}
 
 process.on = noop;
 process.addListener = noop;
@@ -35695,17 +35804,20 @@ process.emit = noop;
 process.prependListener = noop;
 process.prependOnceListener = noop;
 
-process.listeners = function (name) { return [] }
+process.listeners = function (name) {
+    return [] }
 
 process.binding = function (name) {
     throw new Error('process.binding is not supported');
 };
 
-process.cwd = function () { return '/' };
+process.cwd = function () {
+    return '/' };
 process.chdir = function (dir) {
     throw new Error('process.chdir is not supported');
 };
-process.umask = function() { return 0; };
+process.umask = function () {
+    return 0; };
 
 
 /***/ }),
@@ -47248,118 +47360,118 @@ var addressData = __webpack_require__("./node_modules/china-area-data/v3/data.js
 
 // 注册一个名为 select-district 的 Vue 组件
 Vue.component('select-district', {
-  // 定义组件的属性
-  props: {
-    // 用来初始化省市区的值，在编辑时会用到
-    initValue: {
-      type: Array, // 格式是数组
-      default: function _default() {
-        return [];
-      } // 默认是个空数组
-    }
-  },
-  // 定义了这个组件内的数据
-  data: function data() {
-    return {
-      provinces: addressData['86'], // 省列表
-      cities: {}, // 城市列表
-      districts: {}, // 地区列表
-      provinceId: '', // 当前选中的省
-      cityId: '', // 当前选中的市
-      districtId: '' // 当前选中的区
-    };
-  },
+            // 定义组件的属性
+            props: {
+                        // 用来初始化省市区的值，在编辑时会用到
+                        initValue: {
+                                    type: Array, // 格式是数组
+                                    default: function _default() {
+                                                return [];
+                                    } // 默认是个空数组
+                        }
+            },
+            // 定义了这个组件内的数据
+            data: function data() {
+                        return {
+                                    provinces: addressData['86'], // 省列表
+                                    cities: {}, // 城市列表
+                                    districts: {}, // 地区列表
+                                    provinceId: '', // 当前选中的省
+                                    cityId: '', // 当前选中的市
+                                    districtId: '' // 当前选中的区
+                        };
+            },
 
-  // 定义观察器，对应属性变更时会触发对应的观察器函数
-  watch: {
-    // 当选择的省发生改变时触发
-    provinceId: function provinceId(newVal) {
-      if (!newVal) {
-        this.cities = {};
-        this.cityId = '';
-        return;
-      }
-      // 将城市列表设为当前省下的城市
-      this.cities = addressData[newVal];
-      // 如果当前选中的城市不在当前省下，则将选中城市清空
-      if (!this.cities[this.cityId]) {
-        this.cityId = '';
-      }
-    },
+            // 定义观察器，对应属性变更时会触发对应的观察器函数
+            watch: {
+                        // 当选择的省发生改变时触发
+                        provinceId: function provinceId(newVal) {
+                                    if (!newVal) {
+                                                this.cities = {};
+                                                this.cityId = '';
+                                                return;
+                                    }
+                                    // 将城市列表设为当前省下的城市
+                                    this.cities = addressData[newVal];
+                                    // 如果当前选中的城市不在当前省下，则将选中城市清空
+                                    if (!this.cities[this.cityId]) {
+                                                this.cityId = '';
+                                    }
+                        },
 
-    // 当选择的市发生改变时触发
-    cityId: function cityId(newVal) {
-      if (!newVal) {
-        this.districts = {};
-        this.districtId = '';
-        return;
-      }
-      // 将地区列表设为当前城市下的地区
-      this.districts = addressData[newVal];
-      // 如果当前选中的地区不在当前城市下，则将选中地区清空
-      if (!this.districts[this.districtId]) {
-        this.districtId = '';
-      }
-    },
+                        // 当选择的市发生改变时触发
+                        cityId: function cityId(newVal) {
+                                    if (!newVal) {
+                                                this.districts = {};
+                                                this.districtId = '';
+                                                return;
+                                    }
+                                    // 将地区列表设为当前城市下的地区
+                                    this.districts = addressData[newVal];
+                                    // 如果当前选中的地区不在当前城市下，则将选中地区清空
+                                    if (!this.districts[this.districtId]) {
+                                                this.districtId = '';
+                                    }
+                        },
 
-    // 当选择的区发生改变时触发
-    districtId: function districtId() {
-      // 触发一个名为 change 的 Vue 事件，事件的值就是当前选中的省市区名称，格式为数组
-      this.$emit('change', [this.provinces[this.provinceId], this.cities[this.cityId], this.districts[this.districtId]]);
-    }
-  },
-  // 组件初始化时会调用这个方法
-  created: function created() {
-    this.setFromValue(this.initValue);
-  },
+                        // 当选择的区发生改变时触发
+                        districtId: function districtId() {
+                                    // 触发一个名为 change 的 Vue 事件，事件的值就是当前选中的省市区名称，格式为数组
+                                    this.$emit('change', [this.provinces[this.provinceId], this.cities[this.cityId], this.districts[this.districtId]]);
+                        }
+            },
+            // 组件初始化时会调用这个方法
+            created: function created() {
+                        this.setFromValue(this.initValue);
+            },
 
-  methods: {
-    //
-    setFromValue: function setFromValue(value) {
-      // 过滤掉空值
-      value = __WEBPACK_IMPORTED_MODULE_0_lodash___default.a.filter(value);
-      // 如果数组长度为0，则将省清空（由于我们定义了观察器，会联动触发将城市和地区清空）
-      if (value.length === 0) {
-        this.provinceId = '';
-        return;
-      }
-      // 从当前省列表中找到与数组第一个元素同名的项的索引
-      var provinceId = __WEBPACK_IMPORTED_MODULE_0_lodash___default.a.findKey(this.provinces, function (o) {
-        return o === value[0];
-      });
-      // 没找到，清空省的值
-      if (!provinceId) {
-        this.provinceId = '';
-        return;
-      }
-      // 找到了，将当前省设置成对应的ID
-      this.provinceId = provinceId;
-      // 由于观察器的作用，这个时候城市列表已经变成了对应省的城市列表
-      // 从当前城市列表找到与数组第二个元素同名的项的索引
-      var cityId = __WEBPACK_IMPORTED_MODULE_0_lodash___default.a.findKey(addressData[provinceId], function (o) {
-        return o === value[1];
-      });
-      // 没找到，清空城市的值
-      if (!cityId) {
-        this.cityId = '';
-        return;
-      }
-      // 找到了，将当前城市设置成对应的ID
-      this.cityId = cityId;
-      // 由于观察器的作用，这个时候地区列表已经变成了对应城市的地区列表
-      // 从当前地区列表找到与数组第三个元素同名的项的索引
-      var districtId = __WEBPACK_IMPORTED_MODULE_0_lodash___default.a.findKey(addressData[cityId], function (o) {
-        return o === value[2];
-      });
-      // 没找到，清空地区的值
-      if (!districtId) {
-        this.districtId = '';
-        return;
-      }
-      // 找到了，将当前地区设置成对应的ID
-      this.districtId = districtId;
-    }
-  }
+            methods: {
+                        //
+                        setFromValue: function setFromValue(value) {
+                                    // 过滤掉空值
+                                    value = __WEBPACK_IMPORTED_MODULE_0_lodash___default.a.filter(value);
+                                    // 如果数组长度为0，则将省清空（由于我们定义了观察器，会联动触发将城市和地区清空）
+                                    if (value.length === 0) {
+                                                this.provinceId = '';
+                                                return;
+                                    }
+                                    // 从当前省列表中找到与数组第一个元素同名的项的索引
+                                    var provinceId = __WEBPACK_IMPORTED_MODULE_0_lodash___default.a.findKey(this.provinces, function (o) {
+                                                return o === value[0];
+                                    });
+                                    // 没找到，清空省的值
+                                    if (!provinceId) {
+                                                this.provinceId = '';
+                                                return;
+                                    }
+                                    // 找到了，将当前省设置成对应的ID
+                                    this.provinceId = provinceId;
+                                    // 由于观察器的作用，这个时候城市列表已经变成了对应省的城市列表
+                                    // 从当前城市列表找到与数组第二个元素同名的项的索引
+                                    var cityId = __WEBPACK_IMPORTED_MODULE_0_lodash___default.a.findKey(addressData[provinceId], function (o) {
+                                                return o === value[1];
+                                    });
+                                    // 没找到，清空城市的值
+                                    if (!cityId) {
+                                                this.cityId = '';
+                                                return;
+                                    }
+                                    // 找到了，将当前城市设置成对应的ID
+                                    this.cityId = cityId;
+                                    // 由于观察器的作用，这个时候地区列表已经变成了对应城市的地区列表
+                                    // 从当前地区列表找到与数组第三个元素同名的项的索引
+                                    var districtId = __WEBPACK_IMPORTED_MODULE_0_lodash___default.a.findKey(addressData[cityId], function (o) {
+                                                return o === value[2];
+                                    });
+                                    // 没找到，清空地区的值
+                                    if (!districtId) {
+                                                this.districtId = '';
+                                                return;
+                                    }
+                                    // 找到了，将当前地区设置成对应的ID
+                                    this.districtId = districtId;
+                        }
+            }
 });
 
 /***/ }),
@@ -47369,25 +47481,25 @@ Vue.component('select-district', {
 
 // 注册一个名为 user-addresses-create-and-edit 的组件
 Vue.component('user-addresses-create-and-edit', {
-  // 组件的数据
-  data: function data() {
-    return {
-      province: '', // 省
-      city: '', // 市
-      district: '' // 区
-    };
-  },
+    // 组件的数据
+    data: function data() {
+        return {
+            province: '', // 省
+            city: '', // 市
+            district: '' // 区
+        };
+    },
 
-  methods: {
-    // 把参数 val 中的值保存到组件的数据中
-    onDistrictChanged: function onDistrictChanged(val) {
-      if (val.length === 3) {
-        this.province = val[0];
-        this.city = val[1];
-        this.district = val[2];
-      }
+    methods: {
+        // 把参数 val 中的值保存到组件的数据中
+        onDistrictChanged: function onDistrictChanged(val) {
+            if (val.length === 3) {
+                this.province = val[0];
+                this.city = val[1];
+                this.district = val[2];
+            }
+        }
     }
-  }
 });
 
 /***/ }),

@@ -111,15 +111,17 @@ class CouponCode extends Model
         }
 
         /**下面的查询器类似：
-         * select * from orders where user_id = xx and coupon_code_id = xx and ( ( paid_at is null and closed = 0 ) or ( paid_at is not null and refund_status != 'success' ) )
+         * select * from orders where user_id = xx and coupon_code_id = xx and (
+         * ( paid_at is null and closed = 0 ) or ( paid_at is not null and refund_status != 'success' )
+         * )
          **/
         $used = Order::where('user_id', $user->id)
             ->where('coupon_code_id', $this->id)
-            ->where(function($query) {
-                $query->where(function($query) {
+            ->where(function ($query) {
+                $query->where(function ($query) {
                     $query->whereNull('paid_at')
                         ->where('closed', false);
-                })->orWhere(function($query) {
+                })->orWhere(function ($query) {
                     $query->whereNotNull('paid_at')
                         ->where('refund_status', '!=', Order::REFUND_STATUS_SUCCESS);
                 });
@@ -165,5 +167,4 @@ class CouponCode extends Model
             return $this->decrement('used');
         }
     }
-
 }

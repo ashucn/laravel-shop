@@ -21,5 +21,5 @@ require('./components/SelectDistrict');
 require('./components/UserAddressesCreateAndEdit');
 
 const app = new Vue({
-  el: '#app',
+    el: '#app',
 });
