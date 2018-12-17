@@ -65,3 +65,37 @@ htmlspecialchars() 函数默认会把 <>&" 这个 4 个字符分别转义成 <�
 
 对于 Laravel 项目来说已经内置了 CSRF 的防御手段，我们在写前端表单时都需要写一个 <input type="hidden" name="_token" value="{{ csrf_token() }}"> 来提交 CSRF Token，因此我们的项目不会有 CSRF 攻击的风险。
 ````
+
+
+## How to play github online testing??
+访问 https://travis-ci.org/   
+
+
+1.创建travis配置文件  
+ 
+$ touch .travis.yml  
+``````````
+language: php
+
+php:
+ - 7.0
+ - 7.1
+
+before_script:
+  - composer install --dev --prefer-source --no-interaction
+  - cp .env.travis .env
+  - php artisan key:generate
+
+script:
+  - vendor/bin/phpunit
+  - vendor/bin/phpcs app --standard=PSR2
+
+``````````  
+
+2.配置项目  
+  
+composer require --dev squizlabs/php_codesniffer
+Check code before push code to github~!(https://travis-ci.org)
+vendor/bin/phpunit
+vendor/bin/phpcs app --standard=PSR2
+vendor/bin/phpcbf ./ --standard=PSR2

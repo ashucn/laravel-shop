@@ -113,9 +113,11 @@ class OrdersController extends Controller
 
     /**
      * 退款
+     *
      * @param Order $order
      * @param HandleRefundRequest $request
      * @return Order
+     * @throws InternalException
      * @throws InvalidRequestException
      */
     public function handleRefund(Order $order, HandleRefundRequest $request)
